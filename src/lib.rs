@@ -1,10 +1,14 @@
+//todo: padding?
+//todo: pub const fn pad(self, pad: bool) -> Config
+//todo: pub const fn decode_allow_trailing_bits(self, allow: bool) -> Config for Config
+//todo: check the structure of project at some resemblance with official one
 pub enum CharacterSet {
     Standard, //The standard character set (uses + and /). RFC3548
     UrlSafe, //The URL safe character set (uses - and _). RFC3548
-    Crypt, //todo
-    Bcrypt, //todo
-    ImapMutf7, //todo
-    BinHex, //todo
+    Crypt, //The crypt(3) character set (uses ./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz). Not standardized, but folk wisdom on the net asserts that this alphabet is what crypt uses.
+    Bcrypt, //The bcrypt character set (uses ./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789).
+    ImapMutf7, //The character set used in IMAP-modified UTF-7 (uses + and ,). See RFC 3501
+    BinHex, // The character set used in BinHex 4.0 files. See BinHex 4.0 Definition
 }
 
 pub struct Config {
@@ -20,7 +24,11 @@ impl Config {
 }
 
 const URL_SAFE_CHARS: [char; 64] = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'];
-
+const STANDARD_CHARS: [char; 64] = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'];
+const CRYPT_CHARS: [char; 64] = [ '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+const BCRYPT_CHARS: [char; 64] = [ '.', '/', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const IMAP_MUTF7_CHARS: [char; 64] = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', ','];
+const BIN_HEX_CHARS: [char; 64] = ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '0', '1', '2', '3', '4', '5', '6', '8', '9', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'Y', 'Z', '[', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'p', 'q', 'r'];
 
 const STANDARD: Config = Config::new(CharacterSet::Standard, true);
 const STANDARD_NO_PAD: Config = Config::new(CharacterSet::Standard, false);
@@ -37,6 +45,11 @@ pub fn encode_config<T: AsRef<[u8]>>(input: T, config: Config) -> String {
 
     let chars = match config.char_set {
         CharacterSet::UrlSafe => URL_SAFE_CHARS,
+        CharacterSet::Standard => STANDARD_CHARS,
+        CharacterSet::Crypt => CRYPT_CHARS,
+        CharacterSet::Bcrypt => BCRYPT_CHARS,
+        CharacterSet::ImapMutf7 => IMAP_MUTF7_CHARS,
+        CharacterSet::BinHex => BIN_HEX_CHARS,
         _ => panic!("Not implemented")
     };
 

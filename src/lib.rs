@@ -9,7 +9,7 @@ pub fn encode<T: AsRef<[u8]>>(input: T) -> String {
     }
 
     if input.len() >= 3 {
-        for i in (0..=(input.len()-2)).step_by(3) {
+        for i in (0..=(input.len()-3)).step_by(3) {
             let i1 = input[i] >> 2;
             let i2 = ((input[i] & 0b00000011) << 4) | (input[i+1] >> 4);
             let i3 = ((input[i+1] & 0b00001111) << 2) | (input[i+2] >> 6);
@@ -24,7 +24,6 @@ pub fn encode<T: AsRef<[u8]>>(input: T) -> String {
 
     match input.len() % 3 {
         1 => {
-            println!("input.len={}", input.len());
             let i = input.len() - 1;
             let i1 = input[i] >> 2;
             let i2 = (input[i] & 0b00000011) << 4;
@@ -76,6 +75,21 @@ mod tests {
 
         let input = "foo";
         let expected_output = "Zm9v".to_string();
+        let real_output = encode(input);
+        assert_eq!(real_output, expected_output);
+
+        let input = "foob";
+        let expected_output = "Zm9vYg==".to_string();
+        let real_output = encode(input);
+        assert_eq!(real_output, expected_output);
+
+        let input = "fooba";
+        let expected_output = "Zm9vYmE=".to_string();
+        let real_output = encode(input);
+        assert_eq!(real_output, expected_output);
+
+        let input = "foobar";
+        let expected_output = "Zm9vYmFy".to_string();
         let real_output = encode(input);
         assert_eq!(real_output, expected_output);
     }

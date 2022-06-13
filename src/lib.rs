@@ -12,13 +12,15 @@ pub enum CharacterSet {
 }
 
 pub struct Config {
-    char_set: CharacterSet
+    char_set: CharacterSet,
+    pad: bool,
 }
 
 impl Config {
     pub const fn new(char_set: CharacterSet, pad: bool) -> Self {
         Config{
-            char_set: char_set
+            char_set: char_set,
+            pad: pad,
         }
     }
 }
@@ -76,8 +78,10 @@ pub fn encode_config<T: AsRef<[u8]>>(input: T, config: Config) -> String {
             result.push(chars[i1 as usize]);
             result.push(chars[i2 as usize]);
 
-            result.push('=');
-            result.push('=');
+            if config.pad {
+                result.push('=');
+                result.push('=');
+            }
         }
         2 => {
             let i = input.len() - 2;
@@ -89,7 +93,9 @@ pub fn encode_config<T: AsRef<[u8]>>(input: T, config: Config) -> String {
             result.push(chars[i2 as usize]);
             result.push(chars[i3 as usize]);
 
-            result.push('=');
+            if config.pad {
+                result.push('=');
+            }
         }
         _ => ()
     }
@@ -140,6 +146,44 @@ mod tests {
         let input = "foobar";
         let expected_output = "Zm9vYmFy".to_string();
         let real_output = encode_config(input, URL_SAFE);
+        assert_eq!(real_output, expected_output);
+    }
+
+    #[test]
+    fn encode_coding_no_pad_test() {
+        let input = "";
+        let expected_output = "".to_string();
+        let real_output = encode_config(input, URL_SAFE_NO_PAD);
+        assert_eq!(real_output, expected_output);
+
+        let input = "f";
+        let expected_output = "Zg".to_string();
+        let real_output = encode_config(input, URL_SAFE_NO_PAD);
+        assert_eq!(real_output, expected_output);
+
+        let input = "fo";
+        let expected_output = "Zm8".to_string();
+        let real_output = encode_config(input, URL_SAFE_NO_PAD);
+        assert_eq!(real_output, expected_output);
+
+        let input = "foo";
+        let expected_output = "Zm9v".to_string();
+        let real_output = encode_config(input, URL_SAFE_NO_PAD);
+        assert_eq!(real_output, expected_output);
+
+        let input = "foob";
+        let expected_output = "Zm9vYg".to_string();
+        let real_output = encode_config(input, URL_SAFE_NO_PAD);
+        assert_eq!(real_output, expected_output);
+
+        let input = "fooba";
+        let expected_output = "Zm9vYmE".to_string();
+        let real_output = encode_config(input, URL_SAFE_NO_PAD);
+        assert_eq!(real_output, expected_output);
+
+        let input = "foobar";
+        let expected_output = "Zm9vYmFy".to_string();
+        let real_output = encode_config(input, URL_SAFE_NO_PAD);
         assert_eq!(real_output, expected_output);
     }
 }

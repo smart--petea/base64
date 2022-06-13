@@ -1,7 +1,9 @@
-//todo: padding?
-//todo: pub const fn pad(self, pad: bool) -> Config
+//todo forgiving-base64 decode. https://infra.spec.whatwg.org/#forgiving-base64-decode
+//
+//
 //todo: pub const fn decode_allow_trailing_bits(self, allow: bool) -> Config for Config
 //todo: check the structure of project at some resemblance with official one
+#[derive(Debug, Clone, Copy)]
 pub enum CharacterSet {
     Standard, //The standard character set (uses + and /). RFC3548
     UrlSafe, //The URL safe character set (uses - and _). RFC3548
@@ -11,6 +13,7 @@ pub enum CharacterSet {
     BinHex, // The character set used in BinHex 4.0 files. See BinHex 4.0 Definition
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Config {
     char_set: CharacterSet,
     pad: bool,
@@ -22,6 +25,10 @@ impl Config {
             char_set: char_set,
             pad: pad,
         }
+    }
+
+    pub const fn pad (self, pad: bool) -> Config {
+        Self::new(self.char_set, pad)
     }
 }
 

@@ -44,12 +44,15 @@ const STANDARD_NO_PAD: Config = Config::new(CharacterSet::Standard, false);
 const URL_SAFE: Config = Config::new(CharacterSet::UrlSafe, true);
 const URL_SAFE_NO_PAD: Config = Config::new(CharacterSet::UrlSafe, false);
 
-pub fn encode_config<T: AsRef<[u8]>>(input: T, config: Config) -> String {
-    let mut result = String::new();
+pub fn encode_config_buf<T: AsRef<[u8]>>(
+    input: T,
+    config: Config,
+    buf: &mut String,
+) {
     let input = input.as_ref();
 
     if input.len() == 0 {
-        return result;
+        return;
     }
 
     let chars = match config.char_set {
@@ -69,10 +72,10 @@ pub fn encode_config<T: AsRef<[u8]>>(input: T, config: Config) -> String {
             let i3 = ((input[i+1] & 0b00001111) << 2) | (input[i+2] >> 6);
             let i4 = input[i+2] & 0b00111111;
 
-            result.push(chars[i1 as usize]);
-            result.push(chars[i2 as usize]);
-            result.push(chars[i3 as usize]);
-            result.push(chars[i4 as usize]);
+            buf.push(chars[i1 as usize]);
+            buf.push(chars[i2 as usize]);
+            buf.push(chars[i3 as usize]);
+            buf.push(chars[i4 as usize]);
         }
     }
 
@@ -82,12 +85,12 @@ pub fn encode_config<T: AsRef<[u8]>>(input: T, config: Config) -> String {
             let i1 = input[i] >> 2;
             let i2 = (input[i] & 0b00000011) << 4;
 
-            result.push(chars[i1 as usize]);
-            result.push(chars[i2 as usize]);
+            buf.push(chars[i1 as usize]);
+            buf.push(chars[i2 as usize]);
 
             if config.pad {
-                result.push('=');
-                result.push('=');
+                buf.push('=');
+                buf.push('=');
             }
         }
         2 => {
@@ -96,18 +99,23 @@ pub fn encode_config<T: AsRef<[u8]>>(input: T, config: Config) -> String {
             let i2 = ((input[i] & 0b00000011) << 4) | (input[i+1] >> 4);
             let i3 = (input[i+1] & 0b00001111) << 2;
 
-            result.push(chars[i1 as usize]);
-            result.push(chars[i2 as usize]);
-            result.push(chars[i3 as usize]);
+            buf.push(chars[i1 as usize]);
+            buf.push(chars[i2 as usize]);
+            buf.push(chars[i3 as usize]);
 
             if config.pad {
-                result.push('=');
+                buf.push('=');
             }
         }
         _ => ()
     }
+}
 
-    result
+pub fn encode_config<T: AsRef<[u8]>>(input: T, config: Config) -> String {
+    let mut buf = String::new();
+    encode_config_buf(input, config, &mut buf);
+
+    buf
 }
 
 pub fn encode<T: AsRef<[u8]>>(input: T) -> String {

@@ -262,4 +262,29 @@ mod tests {
         let real_output = encode_config(input, URL_SAFE_NO_PAD);
         assert_eq!(real_output, expected_output);
     }
+
+    #[test]
+    fn encode_config_slice_test() {
+        let input = "";
+        let mut real_output = [0u8; 0];
+        let sz = encode_config_slice(input, URL_SAFE_NO_PAD, &mut real_output[..]);
+        assert_eq!(sz, 0);
+
+        let input = "f";
+        let mut real_output = [0u8; 2];
+        let sz = encode_config_slice(input, URL_SAFE_NO_PAD, &mut real_output[..]);
+        assert_eq!(sz, 2);
+        assert_eq!(real_output[0] as char, 'Z');
+        assert_eq!(real_output[1] as char, 'g');
+
+        //todo test is broken
+        let input = "f";
+        let mut real_output = [0u8; 4];
+        let sz = encode_config_slice(input, URL_SAFE, &mut real_output[..]);
+        assert_eq!(sz, 4);
+        assert_eq!(real_output[0] as char, 'Z');
+        assert_eq!(real_output[1] as char, 'g');
+        assert_eq!(real_output[2] as char, '=');
+        assert_eq!(real_output[3] as char, '=');
+    }
 }

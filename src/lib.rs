@@ -184,6 +184,14 @@ pub fn encode<T: AsRef<[u8]>>(input: T) -> String {
     encode_config(input, STANDARD)
 }
 
+fn encode_result_size(n: usize) -> usize {
+    (n / 3) * 4 + match n % 3 {
+        0 => 0,
+        1 => 2,
+        _ => 4,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -304,5 +312,19 @@ mod tests {
         assert_eq!(real_output[1] as char, 'm');
         assert_eq!(real_output[2] as char, '9');
         assert_eq!(real_output[3] as char, 'v');
+    }
+
+    #[test]
+    fn encode_result_size_test() {
+        assert_eq!(encode_result_size(0), 0);
+        assert_eq!(encode_result_size(1), 2);
+        assert_eq!(encode_result_size(2), 4);
+        assert_eq!(encode_result_size(3), 4);
+        assert_eq!(encode_result_size(4), 6);
+        assert_eq!(encode_result_size(5), 8);
+        assert_eq!(encode_result_size(6), 8);
+        assert_eq!(encode_result_size(7), 10);
+        assert_eq!(encode_result_size(8), 12);
+        assert_eq!(encode_result_size(9), 12);
     }
 }

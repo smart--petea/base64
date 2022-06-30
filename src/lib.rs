@@ -108,7 +108,7 @@ pub fn encode_config_slice<T: AsRef<[u8]>>(
                 Err(_err) => return written
             };
 
-            match writer.write(&u8s[i2..i2+2]) {
+            match writer.write(&u8s[i2..i2+1]) {
                 Ok(w) => written += w,
                 Err(_err) => return written
             };
@@ -118,6 +118,7 @@ pub fn encode_config_slice<T: AsRef<[u8]>>(
                     Ok(w) => written += w,
                     Err(_err) => return written
                 };
+
 
                 match writer.write(&EQUAL_U8[..]) {
                     Ok(w) => written += w,
@@ -277,7 +278,6 @@ mod tests {
         assert_eq!(real_output[0] as char, 'Z');
         assert_eq!(real_output[1] as char, 'g');
 
-        //todo test is broken
         let input = "f";
         let mut real_output = [0u8; 4];
         let sz = encode_config_slice(input, URL_SAFE, &mut real_output[..]);
@@ -286,5 +286,23 @@ mod tests {
         assert_eq!(real_output[1] as char, 'g');
         assert_eq!(real_output[2] as char, '=');
         assert_eq!(real_output[3] as char, '=');
+
+        let input = "fo";
+        let mut real_output = [0u8; 4];
+        let sz = encode_config_slice(input, URL_SAFE, &mut real_output[..]);
+        assert_eq!(sz, 4);
+        assert_eq!(real_output[0] as char, 'Z');
+        assert_eq!(real_output[1] as char, 'm');
+        assert_eq!(real_output[2] as char, '8');
+        assert_eq!(real_output[3] as char, '=');
+
+        let input = "foo";
+        let mut real_output = [0u8; 4];
+        let sz = encode_config_slice(input, URL_SAFE, &mut real_output[..]);
+        assert_eq!(sz, 4);
+        assert_eq!(real_output[0] as char, 'Z');
+        assert_eq!(real_output[1] as char, 'm');
+        assert_eq!(real_output[2] as char, '9');
+        assert_eq!(real_output[3] as char, 'v');
     }
 }
